@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Transaction } from "@/types/transaction";
+import { realisticTransactions } from "@/lib/realistic-transactions";
 
 interface TransactionState {
   transactions: Transaction[];
@@ -7,7 +8,7 @@ interface TransactionState {
 }
 
 export const useTransactionStore = create<TransactionState>((set) => ({
-  transactions: [],
+  transactions: realisticTransactions,
   addTransaction: (tx) =>
     set((state) => ({
       transactions: [tx, ...state.transactions],
