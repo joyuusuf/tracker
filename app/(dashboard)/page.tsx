@@ -1,3 +1,4 @@
+"use client";
 import StatCard from "@/components/dashboard/StatCard";
 
 export default function DashboardPage() {

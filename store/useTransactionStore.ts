@@ -1,16 +1,36 @@
 import { create } from "zustand";
-import { Transaction } from "@/types/transaction";
-import { realisticTransactions } from "@/lib/realistic-transactions";
+import { nanoid } from "nanoid";
 
-interface TransactionState {
-  transactions: Transaction[];
-  addTransaction: (tx: Transaction) => void;
+export type TransactionType = "income" | "expense";
+
+export interface Transaction {
+  attachmentPreview: any;
+  id: string;
+  type: TransactionType;
+  title: string;
+  category: string;
+  amount: number;
+  date: string;
+  description?: string;
+  paymentMethod?: string;
+  recurring?: boolean;
+  attachment?: File | null;
 }
 
-export const useTransactionStore = create<TransactionState>((set) => ({
-  transactions: realisticTransactions,
+interface TransactionStore {
+  transactions: Transaction[];
+  addTransaction: (tx: Omit<Transaction, "id">) => void;
+  deleteTransaction: (id: string) => void;
+}
+
+export const useTransactionStore = create<TransactionStore>((set) => ({
+  transactions: [],
   addTransaction: (tx) =>
     set((state) => ({
-      transactions: [tx, ...state.transactions],
+      transactions: [...state.transactions, { id: nanoid(), ...tx }],
+    })),
+  deleteTransaction: (id) =>
+    set((state) => ({
+      transactions: state.transactions.filter((tx) => tx.id !== id),
     })),
 }));

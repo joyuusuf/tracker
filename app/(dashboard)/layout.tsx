@@ -1,18 +1,22 @@
+// app/(dashboard)/layout.tsx
+"use client";
+
+import { useState } from "react";
 import Sidebar from "@/components/dashboard/Sidebar";
-import Topbar from "@/components/dashboard/Topbar";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1">
-        <Topbar />
-        <main className="p-6">{children}</main>
-      </div>
+    <div className="flex">
+      <Sidebar isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <main className="flex-1 md:ml-64 pt-14 md:pt-0">
+        {children}
+      </main>
     </div>
   );
 }
