@@ -20,42 +20,43 @@ export default function AddTransactionPage() {
   const [type, setType] = useState<TransactionType>("expense");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [category, setCategory] = useState<Category>("Food");
-  const [amount, setAmount] = useState<number | "">("");
+  const [amount, setAmount] = useState<string>("");
   const [description, setDescription] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<PaymentMethod>("Cash");
-  const [attachment, setAttachment] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [attachmentPreview, setAttachmentPreview] =
+    useState<string | null>(null);
   const [recurring, setRecurring] = useState(false);
 
+  // Convert image to Base64
   const handleAttachmentChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setAttachment(file);
-    setPreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAttachmentPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (
-      !type ||
-      !date ||
-      !category ||
       !amount ||
       Number(amount) <= 0 ||
-      !paymentMethod ||
       !description.trim() ||
-      !attachment
+      !attachmentPreview
     ) {
       toast.error("Please fill all required fields");
       return;
     }
 
     addTransaction({
+      id: crypto.randomUUID(), // ✅ REQUIRED
       title: description,
       category,
       type,
@@ -63,31 +64,32 @@ export default function AddTransactionPage() {
       date,
       paymentMethod,
       recurring,
-      attachment,
-      attachmentPreview: undefined
+      attachmentPreview, // ✅ Image stored here
     });
 
     toast.success("Transaction saved successfully");
 
-    // reset
+    // Reset form
     setType("expense");
     setDate(new Date().toISOString().slice(0, 10));
     setCategory("Food");
     setAmount("");
     setDescription("");
     setPaymentMethod("Cash");
-    setAttachment(null);
-    setPreview(null);
+    setAttachmentPreview(null);
     setRecurring(false);
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-6">
-      <h1 className="text-2xl font-semibold mb-6">Add New Transaction</h1>
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow mt-6">
+      <h1 className="text-2xl font-semibold mb-6">
+        Add New Transaction
+      </h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Type:</label>
+        {/* Type */}
+        <div className="flex items-center gap-4">
+          <label className="w-32 font-medium">Type:</label>
           <select
             className="border rounded px-3 py-2 flex-1"
             value={type}
@@ -100,8 +102,9 @@ export default function AddTransactionPage() {
           </select>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Date:</label>
+        {/* Date */}
+        <div className="flex items-center gap-4">
+          <label className="w-32 font-medium">Date:</label>
           <input
             type="date"
             className="border rounded px-3 py-2 flex-1"
@@ -110,8 +113,9 @@ export default function AddTransactionPage() {
           />
         </div>
 
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Category:</label>
+        {/* Category */}
+        <div className="flex items-center gap-4">
+          <label className="w-32 font-medium">Category:</label>
           <select
             className="border rounded px-3 py-2 flex-1"
             value={category}
@@ -128,20 +132,22 @@ export default function AddTransactionPage() {
           </select>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Amount:</label>
+        {/* Amount */}
+        <div className="flex items-center gap-4">
+          <label className="w-32 font-medium">Amount:</label>
           <input
             type="number"
             min={0}
             className="border rounded px-3 py-2 flex-1"
             value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
+            onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
           />
         </div>
 
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Payment:</label>
+        {/* Payment */}
+        <div className="flex items-center gap-4">
+          <label className="w-32 font-medium">Payment:</label>
           <select
             className="border rounded px-3 py-2 flex-1"
             value={paymentMethod}
@@ -155,8 +161,9 @@ export default function AddTransactionPage() {
           </select>
         </div>
 
-        <div className="flex items-start space-x-4">
-          <label className="font-medium w-32 mt-2">
+        {/* Description */}
+        <div className="flex items-start gap-4">
+          <label className="w-32 font-medium mt-2">
             Description:
           </label>
           <textarea
@@ -166,23 +173,30 @@ export default function AddTransactionPage() {
           />
         </div>
 
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Attachment:</label>
-          <input type="file" accept="image/*" onChange={handleAttachmentChange} />
+        {/* Image */}
+        <div className="flex items-center gap-4">
+          <label className="w-32 font-medium">Attachment:</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAttachmentChange}
+          />
         </div>
 
-        {preview && (
+        {/* Preview */}
+        {attachmentPreview && (
           <div className="ml-32">
             <img
-              src={preview}
+              src={attachmentPreview}
               alt="Preview"
               className="h-32 rounded border"
             />
           </div>
         )}
 
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Recurring:</label>
+        {/* Recurring */}
+        <div className="flex items-center gap-4">
+          <label className="w-32 font-medium">Recurring:</label>
           <input
             type="checkbox"
             checked={recurring}
@@ -190,7 +204,8 @@ export default function AddTransactionPage() {
           />
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4">
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4">
           <button
             type="button"
             className="px-4 py-2 rounded bg-gray-200"
