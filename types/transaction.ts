@@ -1,10 +1,12 @@
-export type TransactionType = "income" | "expense";
-
-export interface Transaction {
+export type Transaction = {
   id: string;
   title: string;
-  amount: number;
-  type: TransactionType;
+  description: string;
   category: string;
+  type: "income" | "expense";
+  amount: number;
   date: string;
-}
+  paymentMethod: string;
+  recurring: boolean;
+  attachmentPreview?: string | null;
+};

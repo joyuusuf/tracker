@@ -8,7 +8,6 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { useTransactionStore } from "@/store/useTransactionStore";
 
 type SidebarProps = {
   isOpen: boolean; // mobile open
@@ -20,12 +19,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  // Get transactions from store
-  const transactions = useTransactionStore((s) => s.transactions);
-
   const links = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
-    { name: "Transactions", path: "/transactions", icon: ArrowLeftRight, badge: transactions.length },
+    { name: "Transactions", path: "/transactions", icon: ArrowLeftRight, badge: 5 },
     { name: "Analytics", path: "/analytics", icon: BarChart3 },
     { name: "Add Transaction", path: "/add-transaction", icon: PlusCircle },
   ];
@@ -48,7 +44,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={`
-          fixed z-50 bg-white border-r h-screen flex flex-col
+          fixed z-50 border-r h-screen flex flex-col
           transform transition-all duration-300
           top-14 md:top-0
           ${collapsed ? "w-20" : "w-64"}
@@ -115,9 +111,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   `}
                 >
                   <span>{link.name}</span>
-                  {link.badge !== undefined && (
+                  {link.badge && (
                     <span className="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded-full transition-all duration-300">
-                      {link.badge || 0}
+                      {link.badge}
                     </span>
                   )}
                 </div>

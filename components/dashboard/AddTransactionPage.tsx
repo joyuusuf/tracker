@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useTransactionStore } from "@/store/useTransactionStore";
 
 type TransactionType = "income" | "expense";
@@ -14,70 +15,93 @@ type Category =
 type PaymentMethod = "Cash" | "Card" | "Online";
 
 export default function AddTransactionPage() {
+  const addTransaction = useTransactionStore((s) => s.addTransaction);
+
   const [type, setType] = useState<TransactionType>("expense");
-  const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [category, setCategory] = useState<Category>("Food");
-  const [amount, setAmount] = useState<number | "">("");
-  const [description, setDescription] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cash");
-  const [attachment, setAttachment] = useState<File | null>(null);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethod>("Cash");
+  const [attachmentPreview, setAttachmentPreview] =
+    useState<string | null>(null);
   const [recurring, setRecurring] = useState(false);
 
-  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setAttachment(e.target.files[0]);
-    }
+  // Image → Base64 + toast
+  const handleAttachmentChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setAttachmentPreview(reader.result as string);
+      toast.success("Attachment added successfully");
+    };
+
+    reader.readAsDataURL(file);
   };
 
- 
-const addTransaction = useTransactionStore((s) => s.addTransaction);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
+    if (!amount || Number(amount) <= 0 || !description.trim()) {
+      toast.error("Please fill all required fields");
+      return;
+    }
 
-  if (!amount || amount <= 0) {
-    alert("Please enter a valid amount");
-    return;
-  }
+     addTransaction({
+      title: description,
+      description, 
+      category,
+      type,
+      amount: Number(amount),
+      date,
+      paymentMethod,
+      recurring,
+      attachmentPreview,
+    });
 
-  addTransaction({
-    type,
-    title: description || `${type === "income" ? "Income" : "Expense"} - ${category}`,
-    category,
-    amount: Number(amount),
-    date,
-    description,
-    paymentMethod,
-    recurring,
-    attachment,
-    attachmentPreview: undefined
-  });
+    toast.success("Transaction saved successfully");
 
-  alert("Transaction saved successfully!");
+    // Reset form
+    setType("expense");
+    setDate(new Date().toISOString().slice(0, 10));
+    setCategory("Food");
+    setAmount("");
+    setDescription("");
+    setPaymentMethod("Cash");
+    setAttachmentPreview(null);
+    setRecurring(false);
+  };
 
-  // Reset form
-  setType("expense");
-  setDate(new Date().toISOString().slice(0, 10));
-  setCategory("Food");
-  setAmount("");
-  setDescription("");
-  setPaymentMethod("Cash");
-  setAttachment(null);
-  setRecurring(false);
-};
+  const handleCancel = () => {
+    toast("Transaction cancelled", {
+      icon: "⚠️",
+    });
+
+    window.history.back();
+  };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-6">
-      <h1 className="text-2xl font-semibold mb-6">Add New Transaction</h1>
+    <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow mt-6">
+      <h1 className="text-2xl font-semibold mb-6">
+        Add New Transaction
+      </h1>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Transaction Type */}
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Type:</label>
+        {/* Type */}
+        <div className="flex gap-4 items-center">
+          <label className="w-32 font-medium">Type</label>
           <select
             className="border rounded px-3 py-2 flex-1"
             value={type}
-            onChange={(e) => setType(e.target.value as TransactionType)}
+            onChange={(e) =>
+              setType(e.target.value as TransactionType)
+            }
           >
             <option value="income">Income</option>
             <option value="expense">Expense</option>
@@ -85,8 +109,8 @@ const handleSubmit = (e: React.FormEvent) => {
         </div>
 
         {/* Date */}
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Date:</label>
+        <div className="flex gap-4 items-center">
+          <label className="w-32 font-medium">Date</label>
           <input
             type="date"
             className="border rounded px-3 py-2 flex-1"
@@ -96,12 +120,14 @@ const handleSubmit = (e: React.FormEvent) => {
         </div>
 
         {/* Category */}
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Category:</label>
+        <div className="flex gap-4 items-center">
+          <label className="w-32 font-medium">Category</label>
           <select
             className="border rounded px-3 py-2 flex-1"
             value={category}
-            onChange={(e) => setCategory(e.target.value as Category)}
+            onChange={(e) =>
+              setCategory(e.target.value as Category)
+            }
           >
             <option>Food</option>
             <option>Transport</option>
@@ -113,25 +139,27 @@ const handleSubmit = (e: React.FormEvent) => {
         </div>
 
         {/* Amount */}
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Amount:</label>
+        <div className="flex gap-4 items-center">
+          <label className="w-32 font-medium">Amount</label>
           <input
             type="number"
             min={0}
             className="border rounded px-3 py-2 flex-1"
             value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
+            onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
           />
         </div>
 
-        {/* Payment Method */}
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Payment Method:</label>
+        {/* Payment */}
+        <div className="flex gap-4 items-center">
+          <label className="w-32 font-medium">Payment</label>
           <select
             className="border rounded px-3 py-2 flex-1"
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value as PaymentMethod)
+            }
           >
             <option>Cash</option>
             <option>Card</option>
@@ -140,28 +168,41 @@ const handleSubmit = (e: React.FormEvent) => {
         </div>
 
         {/* Description */}
-        <div className="flex items-start space-x-4">
-          <label className="font-medium w-32 mt-2">Description:</label>
+        <div className="flex gap-4">
+          <label className="w-32 font-medium mt-2">
+            Description
+          </label>
           <textarea
             className="border rounded px-3 py-2 flex-1"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional notes"
           />
         </div>
 
         {/* Attachment */}
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Attachment:</label>
-          <input type="file" onChange={handleAttachmentChange} />
-          {attachment && (
-            <span className="text-sm text-gray-600">{attachment.name}</span>
-          )}
+        <div className="flex gap-4 items-center">
+          <label className="w-32 font-medium">Attachment</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAttachmentChange}
+          />
         </div>
 
+        {/* Preview */}
+        {attachmentPreview && (
+          <div className="ml-32">
+            <img
+              src={attachmentPreview}
+              alt="Preview"
+              className="h-32 rounded border"
+            />
+          </div>
+        )}
+
         {/* Recurring */}
-        <div className="flex items-center space-x-4">
-          <label className="font-medium w-32">Recurring:</label>
+        <div className="flex gap-4 items-center">
+          <label className="w-32 font-medium">Recurring</label>
           <input
             type="checkbox"
             checked={recurring}
@@ -169,18 +210,18 @@ const handleSubmit = (e: React.FormEvent) => {
           />
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-end space-x-3 pt-4">
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4">
           <button
             type="button"
-            className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-            onClick={() => window.history.back()}
+            className="px-4 py-2 rounded bg-gray-200"
+            onClick={handleCancel}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+            className="px-4 py-2 rounded bg-green-600 text-white"
           >
             Save
           </button>

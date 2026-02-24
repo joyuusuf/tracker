@@ -55,16 +55,16 @@ export default function AddTransactionPage() {
       return;
     }
 
-    addTransaction({
-      id: crypto.randomUUID(), // ✅ REQUIRED
+     addTransaction({
       title: description,
+      description, 
       category,
       type,
       amount: Number(amount),
       date,
       paymentMethod,
       recurring,
-      attachmentPreview, // ✅ Image stored here
+      attachmentPreview,
     });
 
     toast.success("Transaction saved successfully");
